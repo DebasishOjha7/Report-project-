@@ -162,26 +162,76 @@
 
         // 3. Image OCR Logic
         async function handleImage(input) {
-            const parentRow = input.parentElement.closest('tr');
-            const previewDiv = input.parentElement.querySelector('.img-preview');
-            const statusText = input.parentElement.querySelector('.status-text');
-            const networkCell = parentRow.cells[5];
-            const file = input.files[0];
+    const parentRow = input.parentElement.closest('tr');
+    const previewDiv = input.parentElement.querySelector('.img-preview');
+    const statusLabel = input.parentElement.querySelector('.status-text');
+    const networkCell = parentRow.cells[5]; 
+    const file = input.files[0];
 
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = e => { previewDiv.innerHTML = `<img src="${e.target.result}">`; previewDiv.style.display = 'block'; };
-                reader.readAsDataURL(file);
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = e => { previewDiv.innerHTML = `<img src="${e.target.result}">`; previewDiv.style.display = 'block'; };
+        reader.readAsDataURL(file);
 
-                statusText.innerText = "Scanning...";
-                try {
-                    const result = await Tesseract.recognize(file, 'eng');
-                    const text = result.data.text.toLowerCase();
-                    networkCell.innerHTML = text.includes('jungle') ? "<span style='color:#ef4444;'>📶 Low</span>" : "<span style='color:#22c55e;'>📶 High</span>";
-                    statusText.innerText = text.includes('0%') ? "Power Cut" : "Hardware Offline";
-                } catch (e) { statusText.innerText = "Scan Error"; }
+        statusLabel.innerText = "Scanning Screenshot...";
+        
+        try {
+            const result = await Tesseract.recognize(file, 'eng');
+            const text = result.data.text.toLowerCase();
+            
+            // 1. NETWORK LOGIC (High / Medium)
+            // Jungle, Ghat, Mines milne par Medium dikhayega
+            if (text.includes('jungle') || text.includes('ghat') || text.includes('mines')) {
+                networkCell.innerHTML = "<span style='color:#fbbf24;'>📶 Medium</span>";
+            } else {
+                networkCell.innerHTML = "<span style='color:#22c55e;'>📶 High</span>";
             }
+
+            // 2. OCR DATA EXTRACTION (Status, Ignition, Battery, Voltage)
+            let isOffline = text.includes('offline');
+            let isMoving = text.includes('moving');
+            let isStopped = text.includes('stopped');
+            let isIdling = text.includes('idling');
+
+            // Extraction patterns
+            let ignOn = text.includes('ign on') || text.includes('ignition on');
+            let ignOff = text.includes('ign off') || text.includes('ignition off');
+            let voltZero = text.includes('v: 0') || text.includes('v 0') || text.includes('voltage 0');
+            let voltPositive = !voltZero && (text.includes('v:') || text.includes('voltage'));
+            
+            // Battery Check (Pattern matching for low battery)
+            let batLow = text.match(/([1-9]%)|(10%)/); // 1% to 10%
+            let batZero = text.includes('0%');
+
+            // 3. FINAL REASON LOGIC (As per your request)
+            if (isOffline) {
+                if (ignOn && voltPositive && !batLow) {
+                    statusLabel.innerHTML = "<span style='color:#22c55e;'>🟢 Needs to be Check</span>";
+                } 
+                else if (ignOn && voltZero) {
+                    statusLabel.innerHTML = "<span style='color:#ef4444;'>🔴 Power Cut / Wiring Issue</span>";
+                }
+                else if (ignOn && voltPositive && (batLow || batZero)) {
+                    statusLabel.innerHTML = "<span style='color:#ea580c;'>🟠 Internal Battery Low/Damaged</span>";
+                }
+                else if (ignOff && voltZero && batZero) {
+                    statusLabel.innerHTML = "<span style='color:#9ca3af;'>⚫ Device Fully Dead/GPS Disconnect</span>";
+                }
+                else {
+                    statusLabel.innerText = "Hardware Offline";
+                }
+            } 
+            // 4. MAPPING OTHER STATUS AS IS
+            else if (isMoving) statusLabel.innerText = "Moving";
+            else if (isStopped) statusLabel.innerText = "Stopped";
+            else if (isIdling) statusLabel.innerText = "Idling";
+            else statusLabel.innerText = "Screenshot Analyzed";
+
+        } catch (e) { 
+            statusLabel.innerText = "Scan Error / Try Again"; 
         }
+    }
+}
 
         function addDestinationRow() {
             const tr = document.createElement('tr');
