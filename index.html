@@ -11,34 +11,26 @@
         body { background: #1a1f2b; color: white; font-family: sans-serif; padding: 15px; margin: 0; }
         header { text-align: center; margin-bottom: 20px; }
         .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
-        .card { padding: 15px; border-radius: 10px; text-align: center; transition: 0.3s; }
+        .card { padding: 15px; border-radius: 10px; text-align: center; }
         .card .val { font-size: 1.5rem; font-weight: bold; }
         .card .label { font-size: 0.6rem; text-transform: uppercase; margin-top: 5px; opacity: 0.8; }
-        
-        .blue { background: #2563eb; } .green { background: #16a34a; } 
-        .orange { background: #ea580c; } .red { background: #dc2626; } 
-        .dark-red { background: #7f1d1d; }
-
+        .blue { background: #2563eb; } .green { background: #16a34a; } .orange { background: #ea580c; } .red { background: #dc2626; } .dark-red { background: #7f1d1d; }
         .glass { background: #242936; padding: 20px; border-radius: 15px; border: 1px solid #374151; margin-bottom: 20px; }
         .middle-section { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-
-        .chart-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .chart-container { display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .donut-wrapper { position: relative; width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; margin: 15px 0; }
         .donut-inner { position: absolute; font-size: 1.5rem; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
         th { text-align: left; color: #9ca3af; padding: 10px; border-bottom: 1px solid #374151; }
         td { padding: 10px; border-bottom: 1px solid #1f2937; }
-
         .proof-cell { display: flex; flex-direction: column; gap: 5px; min-width: 150px; }
         .file-input { display: none; }
-        .attach-btn { cursor: pointer; color: #3b82f6; font-size: 0.7rem; display: flex; align-items: center; gap: 5px; }
+        .attach-btn { cursor: pointer; color: #3b82f6; font-size: 0.7rem; display: flex; align-items: center; gap: 5px; border: 1px dashed #3b82f6; padding: 4px; border-radius: 4px; width: fit-content; }
         .img-preview { max-width: 100px; margin-top: 5px; display: none; border: 1px solid #374151; border-radius: 4px; }
         .img-preview img { width: 100%; height: auto; }
-        
         .add-btn { background: #3b82f6; border: none; color: white; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .refresh-btn { background: #4b5563; border: none; color: white; padding: 6px 12px; border-radius: 5px; cursor: pointer; }
         .del-btn { background: #ef4444; color: white; border: none; border-radius: 4px; width: 22px; height: 22px; cursor: pointer; }
+        .status-text { font-weight: bold; font-size: 0.72rem; }
     </style>
 </head>
 <body>
@@ -58,18 +50,13 @@
 
         <div class="middle-section">
             <div class="table-container glass">
-                <div class="table-header" style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <h3>DESTINATION-WISE STATUS</h3>
-                    <div style="display:flex; gap:10px;">
-                        <button class="refresh-btn" onclick="refreshDashboard()">🔄 Refresh Sheet</button>
-                        <button class="add-btn" onclick="addDestinationRow()">+ Add Row</button>
-                    </div>
+                    <button class="add-btn" onclick="addDestinationRow()">+ Add Row</button>
                 </div>
                 <table>
                     <thead>
-                        <tr>
-                            <th>Action</th><th>Destination</th><th>Moving</th><th>Idling</th><th>Stopped</th><th>Offline</th><th>Total</th>
-                        </tr>
+                        <tr><th>Action</th><th>Destination</th><th>Moving</th><th>Idling</th><th>Stopped</th><th>Offline</th><th>Total</th></tr>
                     </thead>
                     <tbody id="destination-rows"></tbody>
                 </table>
@@ -89,15 +76,13 @@
         </div>
 
         <div class="offline-section glass">
-            <div class="table-header" style="margin-bottom: 15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h3>OFFLINE VEHICLE DETAILS</h3>
                 <button class="add-btn" onclick="addOfflineRow()">+ Add Row</button>
             </div>
             <table>
                 <thead>
-                    <tr>
-                        <th>Action</th><th>Vehicle No</th><th>Last Data</th><th>Since</th><th>Location</th><th>Network</th><th>Reason</th><th>Telematics By</th>
-                    </tr>
+                    <tr><th>Action</th><th>Vehicle No</th><th>Last Data</th><th>Since</th><th>Location</th><th>Network</th><th>Reason</th><th>Telematics Done By</th></tr>
                 </thead>
                 <tbody id="offline-rows"></tbody>
             </table>
@@ -105,46 +90,94 @@
     </div>
 
     <script>
-        // Initialize Icons
-        window.onload = () => {
-            lucide.createIcons();
-            autoCalc();
-        };
+        window.onload = () => { lucide.createIcons(); autoCalc(); };
 
-        // 1. Refresh from Google Sheets
-        function refreshDashboard() {
-            if (typeof google !== 'undefined' && google.script && google.script.run) {
-                google.script.run.withSuccessHandler(function(destList) {
-                    const tableBody = document.getElementById("destination-rows");
-                    tableBody.innerHTML = ""; 
-                    destList.forEach(dest => {
-                        tableBody.innerHTML += `<tr>
-                            <td><button class="del-btn" onclick="this.closest('tr').remove(); autoCalc();">✕</button></td>
-                            <td contenteditable="true">${dest.name}</td>
-                            <td contenteditable="true">${dest.moving}</td>
-                            <td contenteditable="true">${dest.idling}</td>
-                            <td contenteditable="true">${dest.stopped}</td>
-                            <td contenteditable="true">${dest.offline}</td>
-                            <td>${dest.total}</td>
-                        </tr>`;
-                    });
-                    autoCalc();
-                }).getDestinationWiseData();
-            } else {
-                alert("Running in Preview. Open via Kasia Tool menu in Google Sheets for live data.");
+        async function handleImage(input) {
+            const parentRow = input.parentElement.closest('tr');
+            const previewDiv = input.parentElement.querySelector('.img-preview');
+            const statusLabel = input.parentElement.querySelector('.status-text');
+            const networkCell = parentRow.cells[5];
+            const file = input.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => { 
+                    previewDiv.innerHTML = `<img src="${e.target.result}">`; 
+                    previewDiv.style.display = 'block'; 
+                };
+                reader.readAsDataURL(file);
+
+                // Only perform OCR for the Dashboard Screenshot (Reason column)
+                if (input.dataset.type === 'reason') {
+                    statusLabel.innerText = "Analyzing...";
+                    try {
+                        const result = await Tesseract.recognize(file, 'eng');
+                        const text = result.data.text.toLowerCase();
+                        
+                        // 1. NETWORK LOGIC (High / Medium)
+                        if (text.includes('jungle') || text.includes('ghat') || text.includes('mines')) {
+                            networkCell.innerHTML = "<span style='color:#fbbf24;'>📶 Medium</span>";
+                        } else {
+                            networkCell.innerHTML = "<span style='color:#22c55e;'>📶 High</span>";
+                        }
+
+                        // 2. EXTRACTION LOGIC
+                        const ignOn = text.includes('ign on') || text.includes('ignition on');
+                        const ignOff = text.includes('ign off') || text.includes('ignition off');
+                        const voltZero = text.includes('v: 0') || text.includes('v 0') || text.includes('voltage 0') || text.includes('voltage: 0');
+                        const bat100 = text.includes('100%');
+                        const bat0 = text.includes('0%') || text.includes('battery 0');
+                        const batLow = text.match(/([1-9]%)|(10%)/); // Checks for 1-10%
+
+                        // 3. FINAL REASON MAPPING (Fixed as per request)
+                        if (text.includes('offline')) {
+                            if (ignOn && bat100 && !voltZero) {
+                                statusLabel.innerHTML = "<span style='color:#22c55e;'>🟢 Needs to be check from backend</span>";
+                            } 
+                            else if (ignOff && voltZero && bat0) {
+                                statusLabel.innerHTML = "<span style='color:#9ca3af;'>⚫ Wiring issue/Gps disconnected</span>";
+                            }
+                            else if (ignOn && voltZero && bat0) {
+                                statusLabel.innerHTML = "<span style='color:#ef4444;'>🔴 Power Cut</span>";
+                            }
+                            else if (ignOn && !voltZero && (batLow || bat0)) {
+                                statusLabel.innerHTML = "<span style='color:#ea580c;'>🟠 Damaged battery</span>";
+                            }
+                            else {
+                                statusLabel.innerText = "Hardware Offline";
+                            }
+                        } 
+                        else if (text.includes('moving')) statusLabel.innerText = "Moving";
+                        else if (text.includes('stopped')) statusLabel.innerText = "Stopped";
+                        else if (text.includes('idling')) statusLabel.innerText = "Idling";
+                        
+                    } catch (e) { statusLabel.innerText = "Scan Error"; }
+                }
             }
         }
 
-        // 2. Calculations for Cards & Chart
-        function autoCalc() {
-            let tM = 0, tI = 0, tS = 0, tO = 0, tTotal = 0;
-            document.querySelectorAll('#destination-rows tr').forEach(row => {
-                const m = parseInt(row.cells[2].innerText) || 0;
-                const i = parseInt(row.cells[3].innerText) || 0;
-                const s = parseInt(row.cells[4].innerText) || 0;
-                const o = parseInt(row.cells[5].innerText) || 0;
-                const rowSum = m + i + s + o;
-                row.cells[6].innerText = rowSum;
+        function addOfflineRow() {
+            const id = Date.now();
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><button class="del-btn" onclick="this.closest('tr').remove();">✕</button></td>
+                <td contenteditable="true">OD--</td>
+                <td contenteditable="true">--</td>
+                <td contenteditable="true">--</td>
+                <td contenteditable="true">--</td>
+                <td style="font-weight:bold;">-</td>
+                <td>
+                    <div class="proof-cell">
+                        <span class="status-text" contenteditable="true">Attach Screenshot</span>
+                        <input type="file" accept="image/*" class="file-input" id="r-${id}" data-type="reason" onchange="handleImage(this)">
+                        <label for="r-${id}" class="attach-btn"><i data-lucide="image"></i> Dashboard</label>
+                        <div class="img-preview"></div>
+                    </div>
+                </td>
+                <td>
+                    <div class="proof-cell">
+                        <span contenteditable="true" style="font-size:0.7rem;">Type Name</span>
+                        <input type="
                 tM += m; tI += i; tS += s; tO += o; tTotal += rowSum;
             });
 
