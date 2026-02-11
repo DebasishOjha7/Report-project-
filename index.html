@@ -10,41 +10,26 @@
     <style>
         body { background: #1a1f2b; color: white; font-family: sans-serif; padding: 15px; margin: 0; }
         header { text-align: center; margin-bottom: 20px; }
-        
-        /* Stats Cards */
         .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
         .card { padding: 15px; border-radius: 10px; text-align: center; }
         .card .val { font-size: 1.5rem; font-weight: bold; }
         .card .label { font-size: 0.6rem; text-transform: uppercase; margin-top: 5px; opacity: 0.8; }
-        
-        .blue { background: #2563eb; } .green { background: #16a34a; } 
-        .orange { background: #ea580c; } .red { background: #dc2626; } 
-        .dark-red { background: #7f1d1d; }
-
+        .blue { background: #2563eb; } .green { background: #16a34a; } .orange { background: #ea580c; } .red { background: #dc2626; } .dark-red { background: #7f1d1d; }
         .glass { background: #242936; padding: 20px; border-radius: 15px; border: 1px solid #374151; margin-bottom: 20px; }
         .middle-section { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-
-        /* Chart */
         .chart-container { display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .donut-wrapper { position: relative; width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; margin: 15px 0; }
         .donut-inner { position: absolute; font-size: 1.5rem; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-
-        /* Tables */
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-        th { text-align: left; color: #9ca3af; padding: 10px; border-bottom: 1px solid #374151; text-transform: uppercase; }
+        th { text-align: left; color: #9ca3af; padding: 10px; border-bottom: 1px solid #374151; }
         td { padding: 10px; border-bottom: 1px solid #1f2937; }
-
-        /* Buttons & Inputs */
         .proof-cell { display: flex; flex-direction: column; gap: 5px; min-width: 150px; }
         .file-input { display: none !important; }
         .attach-btn { cursor: pointer; color: #3b82f6; font-size: 0.7rem; display: flex; align-items: center; gap: 5px; border: 1px dashed #3b82f6; padding: 5px; border-radius: 4px; background: rgba(59,130,246,0.1); width: fit-content; }
-        
         .img-preview { max-width: 100px; margin-top: 5px; display: none; border: 1px solid #374151; border-radius: 4px; overflow: hidden; }
         .img-preview img { width: 100%; height: auto; display: block; }
-        
         .add-btn { background: #3b82f6; border: none; color: white; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .del-btn { background: #ef4444; color: white; border: none; border-radius: 4px; width: 22px; height: 22px; cursor: pointer; }
-        
         .status-text { font-weight: bold; font-size: 0.72rem; line-height: 1.2; display: block; margin-bottom: 4px; }
     </style>
 </head>
@@ -66,7 +51,7 @@
         <div class="middle-section">
             <div class="table-container glass">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="margin:0;">DESTINATION-WISE STATUS</h3>
+                    <h3>DESTINATION-WISE STATUS</h3>
                     <button class="add-btn" onclick="addDestinationRow()">+ Add Row</button>
                 </div>
                 <table>
@@ -86,13 +71,12 @@
                     </svg>
                     <div class="donut-inner" id="percent-text">0%</div>
                 </div>
-                <div id="chart-legend-text" style="font-size:0.7rem; color:#9ca3af;">Online: 0% | Offline: 0%</div>
             </div>
         </div>
 
         <div class="offline-section glass">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 style="margin:0;">OFFLINE VEHICLE DETAILS</h3>
+                <h3>OFFLINE VEHICLE DETAILS</h3>
                 <button class="add-btn" onclick="addOfflineRow()">+ Add Row</button>
             </div>
             <table>
@@ -105,7 +89,6 @@
     </div>
 
     <script>
-        // Init icons and first rows
         window.onload = () => {
             if(window.lucide) lucide.createIcons();
             addDestinationRow();
@@ -133,14 +116,12 @@
                         const result = await Tesseract.recognize(file, 'eng');
                         const text = result.data.text.toLowerCase();
                         
-                        // 1. NETWORK LOGIC (High / Medium)
                         if (text.includes('jungle') || text.includes('ghat') || text.includes('mines')) {
                             networkCell.innerHTML = "<span style='color:#fbbf24;'>📶 Medium</span>";
                         } else {
                             networkCell.innerHTML = "<span style='color:#22c55e;'>📶 High</span>";
                         }
 
-                        // 2. EXTRACTION HELPERS
                         const ignOn = text.includes('ign on') || text.includes('ignition on');
                         const ignOff = text.includes('ign off') || text.includes('ignition off');
                         const voltZero = text.includes('v: 0') || text.includes('v 0') || text.includes('voltage 0') || text.includes('voltage: 0');
@@ -148,28 +129,21 @@
                         const bat0 = text.includes('0%') || text.includes('battery 0');
                         const batLow = text.match(/([1-9]%)|(10%)/);
 
-                        // 3. REASON LOGIC (AS PER YOUR EXACT WORDS)
                         if (text.includes('offline')) {
                             if (ignOn && bat100 && !voltZero) {
                                 statusLabel.innerHTML = "<span style='color:#22c55e;'>🟢 Need to check from backend</span>";
-                            } 
-                            else if (ignOff && voltZero && bat0) {
+                            } else if (ignOff && voltZero && bat0) {
                                 statusLabel.innerHTML = "<span style='color:#9ca3af;'>⚫ Wiring issue/Gps disconnected</span>";
-                            }
-                            else if (ignOn && voltZero && bat0) {
+                            } else if (ignOn && voltZero && bat0) {
                                 statusLabel.innerHTML = "<span style='color:#ef4444;'>🔴 Power Cut</span>";
-                            }
-                            else if (ignOn && !voltZero && (batLow || bat0)) {
+                            } else if (ignOn && !voltZero && (batLow || bat0)) {
                                 statusLabel.innerHTML = "<span style='color:#ea580c;'>🟠 Damaged battery</span>";
-                            }
-                            else {
+                            } else {
                                 statusLabel.innerText = "Hardware Offline";
                             }
-                        } 
-                        else if (text.includes('moving')) statusLabel.innerText = "Moving";
+                        } else if (text.includes('moving')) statusLabel.innerText = "Moving";
                         else if (text.includes('stopped')) statusLabel.innerText = "Stopped";
                         else if (text.includes('idling')) statusLabel.innerText = "Idling";
-                        
                     } catch (e) { statusLabel.innerText = "Scan Error"; }
                 }
             }
@@ -178,36 +152,14 @@
         function addOfflineRow() {
             const id = Date.now();
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><button class="del-btn" onclick="this.closest('tr').remove();">✕</button></td>
-                <td contenteditable="true">OD09...</td>
-                <td contenteditable="true">--</td>
-                <td contenteditable="true">--</td>
-                <td contenteditable="true">--</td>
-                <td style="font-weight:bold;">-</td>
-                <td>
-                    <div class="proof-cell">
-                        <span class="status-text" contenteditable="true">Dashboard Link</span>
-                        <input type="file" accept="image/*" class="file-input" id="r-${id}" data-type="reason" onchange="handleImage(this)">
-                        <label for="r-${id}" class="attach-btn"><i data-lucide="image"></i> Dashboard</label>
-                        <div class="img-preview"></div>
-                    </div>
-                </td>
-                <td>
-                    <div class="proof-cell">
-                        <span contenteditable="true" style="font-size:0.7rem; border-bottom:1px solid #4b5563;">Type Name</span>
-                        <input type="file" accept="image/*" class="file-input" id="p-${id}" data-type="telematics" onchange="handleImage(this)">
-                        <label for="p-${id}" class="attach-btn"><i data-lucide="user-check"></i> Proof</label>
-                        <div class="img-preview"></div>
-                    </div>
-                </td>`;
+            tr.innerHTML = `<td><button class="del-btn" onclick="this.closest('tr').remove();">✕</button></td><td contenteditable="true">OD...</td><td contenteditable="true">--</td><td contenteditable="true">--</td><td contenteditable="true">--</td><td style="font-weight:bold;">-</td><td><div class="proof-cell"><span class="status-text">Click Attach</span><input type="file" accept="image/*" class="file-input" id="r-${id}" data-type="reason" onchange="handleImage(this)"><label for="r-${id}" class="attach-btn"><i data-lucide="image"></i> Dashboard</label><div class="img-preview"></div></div></td><td><div class="proof-cell"><span contenteditable="true" style="font-size:0.7rem; border-bottom:1px solid #4b5563;">Type Name...</span><input type="file" accept="image/*" class="file-input" id="p-${id}" data-type="telematics" onchange="handleImage(this)"><label for="p-${id}" class="attach-btn"><i data-lucide="user-check"></i> Proof</label><div class="img-preview"></div></div></td>`;
             document.getElementById('offline-rows').appendChild(tr);
             if(window.lucide) lucide.createIcons();
         }
 
         function addDestinationRow() {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td><button class="del-btn" onclick="this.closest('tr').remove(); autoCalc();">✕</button></td><td contenteditable="true">New Plant</td><td contenteditable="true">0</td><td contenteditable="true">0</td><td contenteditable="true">0</td><td contenteditable="true">0</td><td>0</td>`;
+            tr.innerHTML = `<td><button class="del-btn" onclick="this.closest('tr').remove(); autoCalc();">✕</button></td><td contenteditable="true">Plant A</td><td contenteditable="true">0</td><td contenteditable="true">0</td><td contenteditable="true">0</td><td contenteditable="true">0</td><td>0</td>`;
             document.getElementById('destination-rows').appendChild(tr);
             autoCalc();
         }
@@ -225,205 +177,13 @@
             document.getElementById('idling-count').innerText = i;
             document.getElementById('stopped-count').innerText = s;
             document.getElementById('offline-count').innerText = o;
-
             const per = total > 0 ? Math.round(((total-o)/total)*100) : 0;
             document.getElementById('percent-text').innerText = per + "%";
             const bar = document.getElementById('online-bar');
             if(bar) bar.style.strokeDashoffset = 345.5 - (per/100 * 345.5);
-            document.getElementById('chart-legend-text').innerText = `Online: ${per}% | Offline: ${100-per}%`;
         }
 
         document.getElementById('destination-rows').addEventListener('input', autoCalc);
     </script>
 </body>
 </html>
-                // Only perform OCR for the Dashboard Screenshot (Reason column)
-                if (input.dataset.type === 'reason') {
-                    statusLabel.innerText = "Analyzing...";
-                    try {
-                        const result = await Tesseract.recognize(file, 'eng');
-                        const text = result.data.text.toLowerCase();
-                        
-                        // 1. NETWORK LOGIC (High / Medium)
-                        if (text.includes('jungle') || text.includes('ghat') || text.includes('mines')) {
-                            networkCell.innerHTML = "<span style='color:#fbbf24;'>📶 Medium</span>";
-                        } else {
-                            networkCell.innerHTML = "<span style='color:#22c55e;'>📶 High</span>";
-                        }
-
-                        // 2. EXTRACTION LOGIC
-                        const ignOn = text.includes('ign on') || text.includes('ignition on');
-                        const ignOff = text.includes('ign off') || text.includes('ignition off');
-                        const voltZero = text.includes('v: 0') || text.includes('v 0') || text.includes('voltage 0') || text.includes('voltage: 0');
-                        const bat100 = text.includes('100%');
-                        const bat0 = text.includes('0%') || text.includes('battery 0');
-                        const batLow = text.match(/([1-9]%)|(10%)/); // Checks for 1-10%
-
-                        // 3. FINAL REASON MAPPING (Fixed as per request)
-                        if (text.includes('offline')) {
-                            if (ignOn && bat100 && !voltZero) {
-                                statusLabel.innerHTML = "<span style='color:#22c55e;'>🟢 Needs to be check from backend</span>";
-                            } 
-                            else if (ignOff && voltZero && bat0) {
-                                statusLabel.innerHTML = "<span style='color:#9ca3af;'>⚫ Wiring issue/Gps disconnected</span>";
-                            }
-                            else if (ignOn && voltZero && bat0) {
-                                statusLabel.innerHTML = "<span style='color:#ef4444;'>🔴 Power Cut</span>";
-                            }
-                            else if (ignOn && !voltZero && (batLow || bat0)) {
-                                statusLabel.innerHTML = "<span style='color:#ea580c;'>🟠 Damaged battery</span>";
-                            }
-                            else {
-                                statusLabel.innerText = "Hardware Offline";
-                            }
-                        } 
-                        else if (text.includes('moving')) statusLabel.innerText = "Moving";
-                        else if (text.includes('stopped')) statusLabel.innerText = "Stopped";
-                        else if (text.includes('idling')) statusLabel.innerText = "Idling";
-                        
-                    } catch (e) { statusLabel.innerText = "Scan Error"; }
-                }
-            }
-        }
-
-        function addOfflineRow() {
-            const id = Date.now();
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><button class="del-btn" onclick="this.closest('tr').remove();">✕</button></td>
-                <td contenteditable="true">OD--</td>
-                <td contenteditable="true">--</td>
-                <td contenteditable="true">--</td>
-                <td contenteditable="true">--</td>
-                <td style="font-weight:bold;">-</td>
-                <td>
-                    <div class="proof-cell">
-                        <span class="status-text" contenteditable="true">Attach Screenshot</span>
-                        <input type="file" accept="image/*" class="file-input" id="r-${id}" data-type="reason" onchange="handleImage(this)">
-                        <label for="r-${id}" class="attach-btn"><i data-lucide="image"></i> Dashboard</label>
-                        <div class="img-preview"></div>
-                    </div>
-                </td>
-                <td>
-                    <div class="proof-cell">
-                        <span contenteditable="true" style="font-size:0.7rem;">Type Name</span>
-                        <input type="
-                tM += m; tI += i; tS += s; tO += o; tTotal += rowSum;
-            });
-
-            document.getElementById('total-count').innerText = tTotal;
-            document.getElementById('moving-count').innerText = tM;
-            document.getElementById('idling-count').innerText = tI;
-            document.getElementById('stopped-count').innerText = tS;
-            document.getElementById('offline-count').innerText = tO;
-
-            const onlinePer = tTotal > 0 ? Math.round(((tTotal - tO) / tTotal) * 100) : 0;
-            document.getElementById('percent-text').innerText = onlinePer + "%";
-            document.getElementById('online-bar').style.strokeDashoffset = 345.5 - (onlinePer / 100 * 345.5);
-            document.getElementById('chart-legend-text').innerText = `Online: ${onlinePer}% | Offline: ${100-onlinePer}%`;
-        }
-
-        // 3. Image OCR Logic
-        async function handleImage(input) {
-    const parentRow = input.parentElement.closest('tr');
-    const previewDiv = input.parentElement.querySelector('.img-preview');
-    const statusLabel = input.parentElement.querySelector('.status-text');
-    const networkCell = parentRow.cells[5]; 
-    const file = input.files[0];
-
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = e => { previewDiv.innerHTML = `<img src="${e.target.result}">`; previewDiv.style.display = 'block'; };
-        reader.readAsDataURL(file);
-
-        statusLabel.innerText = "Scanning Screenshot...";
-        
-        try {
-            const result = await Tesseract.recognize(file, 'eng');
-            const text = result.data.text.toLowerCase();
-            
-            // 1. NETWORK LOGIC (High / Medium)
-            // Jungle, Ghat, Mines milne par Medium dikhayega
-            if (text.includes('jungle') || text.includes('ghat') || text.includes('mines')) {
-                networkCell.innerHTML = "<span style='color:#fbbf24;'>📶 Medium</span>";
-            } else {
-                networkCell.innerHTML = "<span style='color:#22c55e;'>📶 High</span>";
-            }
-
-            // 2. OCR DATA EXTRACTION (Status, Ignition, Battery, Voltage)
-            let isOffline = text.includes('offline');
-            let isMoving = text.includes('moving');
-            let isStopped = text.includes('stopped');
-            let isIdling = text.includes('idling');
-
-            // Extraction patterns
-            let ignOn = text.includes('ign on') || text.includes('ignition on');
-            let ignOff = text.includes('ign off') || text.includes('ignition off');
-            let voltZero = text.includes('v: 0') || text.includes('v 0') || text.includes('voltage 0');
-            let voltPositive = !voltZero && (text.includes('v:') || text.includes('voltage'));
-            
-            // Battery Check (Pattern matching for low battery)
-            let batLow = text.match(/([1-9]%)|(10%)/); // 1% to 10%
-            let batZero = text.includes('0%');
-
-            // 3. FINAL REASON LOGIC (As per your request)
-            if (isOffline) {
-                if (ignOn && voltPositive && !batLow) {
-                    statusLabel.innerHTML = "<span style='color:#22c55e;'>🟢 Needs to be Check</span>";
-                } 
-                else if (ignOn && voltZero) {
-                    statusLabel.innerHTML = "<span style='color:#ef4444;'>🔴 Power Cut / Wiring Issue</span>";
-                }
-                else if (ignOn && voltPositive && (batLow || batZero)) {
-                    statusLabel.innerHTML = "<span style='color:#ea580c;'>🟠 Internal Battery Low/Damaged</span>";
-                }
-                else if (ignOff && voltZero && batZero) {
-                    statusLabel.innerHTML = "<span style='color:#9ca3af;'>⚫ Device Fully Dead/GPS Disconnect</span>";
-                }
-                else {
-                    statusLabel.innerText = "Hardware Offline";
-                }
-            } 
-            // 4. MAPPING OTHER STATUS AS IS
-            else if (isMoving) statusLabel.innerText = "Moving";
-            else if (isStopped) statusLabel.innerText = "Stopped";
-            else if (isIdling) statusLabel.innerText = "Idling";
-            else statusLabel.innerText = "Screenshot Analyzed";
-
-        } catch (e) { 
-            statusLabel.innerText = "Scan Error / Try Again"; 
-        }
-    }
-}
-
-        function addDestinationRow() {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td><button class="del-btn" onclick="this.closest('tr').remove(); autoCalc();">✕</button></td><td contenteditable="true">New Plant</td><td contenteditable="true">0</td><td contenteditable="true">0</td><td contenteditable="true">0</td><td contenteditable="true">0</td><td>0</td>`;
-            document.getElementById('destination-rows').appendChild(tr);
-        }
-
-        function addOfflineRow() {
-            const id = Date.now();
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><button class="del-btn" onclick="this.closest('tr').remove();">✕</button></td>
-                <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
-                <td>-</td>
-                <td>
-                    <div class="proof-cell">
-                        <span class="status-text">Attach Screenshot</span>
-                        <input type="file" class="file-input" id="r-${id}" onchange="handleImage(this)">
-                        <label for="r-${id}" class="attach-btn"><i data-lucide="image"></i> Dashboard</label>
-                        <div class="img-preview"></div>
-                    </div>
-                </td>
-                <td contenteditable="true">Operator Name</td>`;
-            document.getElementById('offline-rows').appendChild(tr);
-            lucide.createIcons();
-        }
-
-        document.getElementById('destination-rows').addEventListener('input', autoCalc);
-    </script>
-</body>
-</html>
-
